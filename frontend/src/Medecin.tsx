@@ -672,7 +672,13 @@ const Medecin: React.FC<{ token: string }> = ({ token }) => {
 
   const handleLogout = () => {
     localStorage.removeItem("token");
-    window.location.href = "http://localhost:5173/";
+    navigate("/");
+    // Forcer le rechargement de la page pour s'assurer que l'état est réinitialisé
+    window.location.reload();
+  };
+
+  const handleUserManagement = () => {
+    navigate("/users");
   };
 
   // Suppression d'une prédiction de l'historique

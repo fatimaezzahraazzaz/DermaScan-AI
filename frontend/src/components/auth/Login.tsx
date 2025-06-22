@@ -42,6 +42,7 @@ const Login: React.FC<Props> = ({ onLoginSuccess }) => {
     <form
       onSubmit={handleSubmit}
       className="w-full max-w-md bg-white/90 rounded-3xl shadow-2xl p-10 animate-fade-in flex flex-col items-center relative overflow-hidden"
+      autoComplete="off"
     >
       {/* Animation médicale */}
       <div className="absolute -top-10 -right-10 opacity-30 pointer-events-none z-0">
@@ -79,6 +80,7 @@ const Login: React.FC<Props> = ({ onLoginSuccess }) => {
         onChange={e => setEmail(e.target.value)}
         required
         autoFocus
+        autoComplete="off"
       />
       <input
         type="password"
@@ -87,6 +89,7 @@ const Login: React.FC<Props> = ({ onLoginSuccess }) => {
         value={password}
         onChange={e => setPassword(e.target.value)}
         required
+        autoComplete="new-password"
       />
       <button
         type="submit"

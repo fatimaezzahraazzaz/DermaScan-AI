@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Loader2, ImagePlus, History, Info, LogOut, User, Download, Menu, X, ArrowLeft, Trash2 } from "lucide-react";
 import jsPDF from "jspdf";
+import { useNavigate } from "react-router-dom";
 
 // Déclaration des types pour Google Maps
 declare global {
@@ -37,6 +38,7 @@ const Patient: React.FC<PatientProps> = ({ token }) => {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
+  const navigate = useNavigate();
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -95,7 +97,9 @@ const Patient: React.FC<PatientProps> = ({ token }) => {
   // Ajoute une fonction de déconnexion 
   const handleLogout = () => {
     localStorage.removeItem("token");
-    window.location.href = "/";
+    navigate("/");
+    // Forcer le rechargement de la page pour s'assurer que l'état est réinitialisé
+    window.location.reload();
   };
 
   // Ajoute une fonction pour afficher le profil 
@@ -391,7 +395,6 @@ const Patient: React.FC<PatientProps> = ({ token }) => {
       doc.setFontSize(12);
       doc.setTextColor(33, 37, 41);
 
-      // Récupère les médecins depuis l'API Google Places
       try {
         // Fonction pour déterminer la spécialité en fonction de la maladie
         const getSpecialty = (disease: string) => {
@@ -414,417 +417,6 @@ const Patient: React.FC<PatientProps> = ({ token }) => {
         };
 
         const specialty = getSpecialty(prediction.predicted_class);
-        const service = new window.google.maps.places.PlacesService(document.createElement("div"));
-        const userPos = await new Promise<{lat: number, lng: number}>((resolve, reject) => {
-          navigator.geolocation.getCurrentPosition(
-            pos => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-            err => reject(new Error("Impossible de récupérer la position de l'utilisateur."))
-          );
-        });
-
-        let doctors = [];
-        try {
-          doctors = await new Promise<any[]>((resolve) => {
-            service.nearbySearch(
-              {
-                location: userPos,
-                radius: 5000,
-                keyword: specialty,
-                type: "doctor"
-              },
-              (results: any, status: any) => {
-                if (status === "OK" && Array.isArray(results)) {
-                  resolve(results.slice(0, 3));
-                } else {
-                  resolve([]);
-                }
-              }
-            );
-          });
-        } catch (error) {
-          doc.text("Impossible de récupérer la liste des médecins (géolocalisation refusée ou indisponible).", margin, y);
-          y += 6;
-        }
-
-        if (doctors.length > 0) {
-          doctors.forEach((doctor, index) => {
-            // Vérifie si on a besoin d'une nouvelle page
-            if (y > 250) {
-              doc.addPage();
-              y = 20;
-            }
-
-            // Nom du médecin
-            doc.setFont('helvetica', 'bold');
-            const nameLines = doc.splitTextToSize(`${index + 1}. ${doctor.name}`, pageWidth - 2 * margin);
-            doc.text(nameLines, margin, y);
-            y += nameLines.length * 6;
-
-            // Adresse
-            doc.setFont('helvetica', 'normal');
-            const addressLines = doc.splitTextToSize(`   Adresse : ${doctor.vicinity}`, pageWidth - 2 * margin);
-            doc.text(addressLines, margin, y);
-            y += addressLines.length * 6;
-
-            y += 4; // Espace entre les médecins
-          });
-        } else {
-          doc.text("Aucun médecin trouvé à proximité.", margin, y);
-          y += 6;
-        }
-      } catch (error) {
-        console.error("Erreur lors de la récupération des médecins:", error);
-        doc.text("Impossible de récupérer la liste des médecins.", margin, y);
-        y += 6;
-      }
-
-      y += 10;
-      doc.setFont('helvetica', 'italic');
-      doc.setTextColor(100, 100, 100);
-      doc.setFontSize(11);
-      doc.text("Merci d'utiliser DermaScan AI.", margin, y);
-
-      // Pied de page
-      doc.setFontSize(9);
-      doc.setTextColor(180, 180, 180);
-      doc.text("Rapport généré automatiquement - DermaScan AI", pageWidth / 2, 290, { align: "center" });
-
-      // Sauvegarde du PDF
-      const fileName = `rapport_${userInfo?.nom || "patient"}_${prediction.id}.pdf`;
-      doc.save(fileName);
-    } catch (error) {
-      console.error('Erreur lors de la génération du rapport:', error);
-      alert("Erreur lors de la génération du rapport PDF.");
-    }
-  };
-
-  // Suppression d'une prédiction de l'historique
-  const handleDeleteHistory = async (id: number) => {
-    setPendingDeleteId(id);
-    setShowDeleteModal(true);
-  };
-
-  const confirmDeleteHistory = async () => {
-    if (!pendingDeleteId) return;
-    try {
-      await fetch(`http://localhost:8000/delete_prediction/${pendingDeleteId}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setHistory((prev) => prev.filter((h) => h.id !== pendingDeleteId));
-      if (selectedHistory && selectedHistory.id === pendingDeleteId) setSelectedHistory(null);
-    } catch {
-      alert("Erreur lors de la suppression.");
-    }
-    setShowDeleteModal(false);
-    setPendingDeleteId(null);
-  };
-
-  // Ajoute cette nouvelle fonction pour gérer le téléchargement du rapport historique
-  const handleDownloadHistory = async (historyItem: any) => {
-    try {
-      // Fonction pour déterminer la spécialité en fonction de la maladie
-      const getSpecialty = (disease: string) => {
-        if (!disease) return "dermatologue";
-        const d = disease.toLowerCase();
-        if (
-          d.includes("acne") ||
-          d.includes("eczema") ||
-          d.includes("psoriasis") ||
-          d.includes("melanoma") ||
-          d.includes("dermatitis") ||
-          d.includes("keratosis") ||
-          d.includes("tinea") ||
-          d.includes("warts") ||
-          d.includes("seborrheic")
-        ) {
-          return "dermatologue";
-        }
-        return "médecin";
-      };
-
-      // Récupérer les informations de l'utilisateur
-      const userResponse = await fetch("http://localhost:8000/user", {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
-      const userData = await userResponse.json();
-
-      // Récupérer l'image de la prédiction
-      let imageData: string | null = null;
-      try {
-        const imageResponse = await fetch(`http://localhost:8000/prediction/${historyItem.id}/image`, {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
-        if (imageResponse.ok) {
-          const blob = await imageResponse.blob();
-          imageData = await new Promise((resolve) => {
-            const reader = new FileReader();
-            reader.onloadend = () => resolve(reader.result as string);
-            reader.readAsDataURL(blob);
-          });
-        }
-      } catch (error) {
-        console.error("Erreur lors de la récupération de l'image:", error);
-      }
-
-      // Récupérer les conseils médicaux
-      const adviceResponse = await fetch("http://localhost:8000/disease_advice", {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
-      const adviceData = await adviceResponse.json();
-
-      // Récupérer les liens utiles
-      const linksResponse = await fetch("http://localhost:8000/disease_links", {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
-      const linksData = await linksResponse.json();
-
-      // Créer le PDF
-      const doc = new jsPDF();
-      let y = 20;
-      const pageWidth = doc.internal.pageSize.getWidth();
-      const margin = 18;
-      const sectionSpace = 12;
-
-      // Logo DermaScan AI
-      doc.setFillColor(34, 197, 94); // vert
-      doc.rect(margin, y - 12, 10, 10, 'F');
-      doc.setFillColor(59, 130, 246); // bleu
-      doc.rect(margin + 12, y - 12, 10, 10, 'F');
-      doc.setFontSize(22);
-      doc.setTextColor(34, 197, 94);
-      doc.setFont('helvetica', 'bold');
-      doc.text("DermaScan AI - Rapport d'analyse", pageWidth / 2, y, { align: "center" });
-      y += 10;
-      doc.setDrawColor(34, 197, 94);
-      doc.setLineWidth(1.2);
-      doc.line(margin, y, pageWidth - margin, y);
-      y += 6;
-
-      // --- Infos patient détaillées ---
-      doc.setFontSize(15);
-      doc.setTextColor(59, 130, 246);
-      doc.setFont('helvetica', 'bold');
-      doc.text("Informations du patient", margin, y);
-      y += 7;
-      doc.setDrawColor(200, 230, 201);
-      doc.setLineWidth(0.7);
-      doc.line(margin, y, pageWidth - margin, y);
-      y += 4;
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(12);
-      doc.setTextColor(33, 37, 41);
-      doc.text(`Nom : ${userData.prenom} ${userData.nom}`, margin, y); y += 6;
-      doc.text(`Email : ${userData.email}`, margin, y); y += 6;
-      doc.text(`Téléphone : ${userData.telephone}`, margin, y); y += 6;
-      doc.text(`Sexe : ${userData.sexe}`, margin, y); y += 6;
-      doc.text(`Âge : ${userData.age}`, margin, y); y += sectionSpace;
-
-      // --- Image analysée ---
-      doc.setFontSize(15);
-      doc.setTextColor(34, 197, 94);
-      doc.setFont('helvetica', 'bold');
-      doc.text("Image analysée", margin, y);
-      y += 7;
-      doc.setDrawColor(191, 219, 254);
-      doc.setLineWidth(0.7);
-      doc.line(margin, y, pageWidth - margin, y);
-      y += 4;
-
-      // Ajoute l'image si disponible
-      if (imageData) {
-        try {
-          const img = new Image();
-          img.src = imageData;
-          await new Promise((resolve) => {
-            img.onload = resolve;
-          });
-
-          const maxWidth = pageWidth - 2 * margin;
-          const maxHeight = 60;
-          let imgWidth = img.width;
-          let imgHeight = img.height;
-
-          if (imgWidth > maxWidth) {
-            const ratio = maxWidth / imgWidth;
-            imgWidth = maxWidth;
-            imgHeight = imgHeight * ratio;
-          }
-          if (imgHeight > maxHeight) {
-            const ratio = maxHeight / imgHeight;
-            imgHeight = maxHeight;
-            imgWidth = imgWidth * ratio;
-          }
-
-          const x = (pageWidth - imgWidth) / 2;
-          doc.addImage(img, 'JPEG', x, y, imgWidth, imgHeight);
-          y += imgHeight + 2;
-
-          doc.setFont('helvetica', 'italic');
-          doc.setFontSize(7);
-          doc.setTextColor(100, 100, 100);
-          doc.text("Image analysée par DermaScan AI", pageWidth / 2, y, { align: "center" });
-          y += 3;
-          y += 2;
-        } catch (error) {
-          console.error("Erreur lors de l'ajout de l'image au PDF:", error);
-          doc.setFont('helvetica', 'normal');
-          doc.setFontSize(12);
-          doc.setTextColor(33, 37, 41);
-          doc.text("Image non disponible", margin, y);
-          y += sectionSpace;
-        }
-      }
-
-      // --- Résultat principal ---
-      doc.setFontSize(15);
-      doc.setTextColor(34, 197, 94);
-      doc.setFont('helvetica', 'bold');
-      doc.text("Résultat de l'analyse", margin, y);
-      y += 7;
-      doc.setDrawColor(191, 219, 254);
-      doc.setLineWidth(0.7);
-      doc.line(margin, y, pageWidth - margin, y);
-      y += 4;
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(12);
-      doc.setTextColor(33, 37, 41);
-      const dateStr = historyItem.date ? new Date(historyItem.date).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' }) : '';
-      doc.text(`Date de l'analyse : ${dateStr}`, margin, y); y += 6;
-      doc.text(`Maladie prédite : ${historyItem.predicted_class}`, margin, y); y += 6;
-      if (historyItem.confidence) {
-        let confVal = '';
-        if (typeof historyItem.confidence === 'number') {
-          confVal = (historyItem.confidence <= 1 ? (historyItem.confidence * 100).toFixed(1) : historyItem.confidence.toFixed(1)) + '%';
-        } else if (typeof historyItem.confidence === 'string') {
-          const numConf = parseFloat(historyItem.confidence);
-          if (!isNaN(numConf)) {
-            confVal = (numConf <= 1 ? (numConf * 100).toFixed(1) : numConf.toFixed(1)) + '%';
-          } else {
-            confVal = historyItem.confidence;
-          }
-        }
-        doc.text(`Confiance : ${confVal}`, margin, y); y += sectionSpace;
-      }
-
-      // --- Conseils médicaux ---
-      doc.setFontSize(15);
-      doc.setTextColor(34, 197, 94);
-      doc.setFont('helvetica', 'bold');
-      doc.text("Conseils médicaux", margin, y);
-      y += 7;
-      doc.setDrawColor(191, 219, 254);
-      doc.setLineWidth(0.7);
-      doc.line(margin, y, pageWidth - margin, y);
-      y += 4;
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(12);
-      doc.setTextColor(33, 37, 41);
-
-      // Recherche des conseils dans le JSON
-      const adviceKey = Object.keys(adviceData).find(k => historyItem.predicted_class.includes(k));
-      if (adviceKey && adviceData[adviceKey]) {
-        const advice = adviceData[adviceKey];
-        if (advice.description) {
-          doc.text("Description :", margin, y); y += 6;
-          const descLines = doc.splitTextToSize(advice.description, pageWidth - 2 * margin);
-          doc.text(descLines, margin, y); y += descLines.length * 6;
-        }
-        if (Array.isArray(advice.conseils)) {
-          doc.text("Conseils :", margin, y); y += 6;
-          advice.conseils.forEach((conseil: string) => {
-            const lines = doc.splitTextToSize(`• ${conseil}`, pageWidth - 2 * margin);
-            doc.text(lines, margin, y); y += lines.length * 6;
-          });
-        }
-        if (advice.gravite) {
-          doc.text(`Gravité : ${advice.gravite}`, margin, y); y += 6;
-        }
-        if (advice.recommandation) {
-          doc.text("Recommandation :", margin, y); y += 6;
-          const recLines = doc.splitTextToSize(advice.recommandation, pageWidth - 2 * margin);
-          doc.text(recLines, margin, y); y += recLines.length * 6;
-        }
-      } else {
-        doc.text("Aucun conseil spécifique disponible pour cette maladie.", margin, y); y += 6;
-      }
-      y += sectionSpace;
-
-      // --- Liens utiles ---
-      const linksKey = Object.keys(linksData).find(k => historyItem.predicted_class.includes(k));
-      const diseaseLinks = linksKey ? linksData[linksKey] : null;
-
-      if (diseaseLinks && Array.isArray(diseaseLinks) && diseaseLinks.length > 0) {
-        if (y > 250) {
-          doc.addPage();
-          y = 20;
-        }
-
-        doc.setFontSize(15);
-        doc.setTextColor(34, 197, 94);
-        doc.setFont('helvetica', 'bold');
-        doc.text("Liens utiles", margin, y);
-        y += 7;
-        doc.setDrawColor(191, 219, 254);
-        doc.setLineWidth(0.7);
-        doc.line(margin, y, pageWidth - margin, y);
-        y += 4;
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(12);
-        doc.setTextColor(33, 37, 41);
-
-        diseaseLinks.forEach((link: any) => {
-          if (y > 250) {
-            doc.addPage();
-            y = 20;
-          }
-
-          const titleLines = doc.splitTextToSize(`• ${link.title}`, pageWidth - 2 * margin);
-          doc.text(titleLines, margin, y);
-          y += titleLines.length * 6;
-
-          doc.setFontSize(10);
-          doc.setTextColor(59, 130, 246);
-          const urlLines = doc.splitTextToSize(`  ${link.url}`, pageWidth - 2 * margin);
-          doc.text(urlLines, margin, y);
-          doc.link(margin, y - urlLines.length * 5, pageWidth - 2 * margin, urlLines.length * 5, { url: link.url });
-          y += urlLines.length * 5;
-
-          doc.setFontSize(12);
-          doc.setTextColor(33, 37, 41);
-          y += 4;
-        });
-      }
-
-      // --- Médecins recommandés ---
-      if (y > 250) {
-        doc.addPage();
-        y = 20;
-      }
-
-      doc.setFontSize(15);
-      doc.setTextColor(34, 197, 94);
-      doc.setFont('helvetica', 'bold');
-      doc.text("Médecins recommandés", margin, y);
-      y += 7;
-      doc.setDrawColor(191, 219, 254);
-      doc.setLineWidth(0.7);
-      doc.line(margin, y, pageWidth - margin, y);
-      y += 4;
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(12);
-      doc.setTextColor(33, 37, 41);
-
-      try {
-        const specialty = getSpecialty(historyItem.predicted_class);
         const service = new window.google.maps.places.PlacesService(document.createElement("div"));
         const userPos = await new Promise<{lat: number, lng: number}>((resolve, reject) => {
           navigator.geolocation.getCurrentPosition(
@@ -898,7 +490,416 @@ const Patient: React.FC<PatientProps> = ({ token }) => {
       doc.text("Rapport généré automatiquement - DermaScan AI", pageWidth / 2, 290, { align: "center" });
 
       // Sauvegarde du PDF
-      const fileName = `rapport_${userData.nom || "patient"}_${historyItem.id}.pdf`;
+      const fileName = `rapport_${userInfo?.nom || "patient"}_${prediction.id}.pdf`;
+      doc.save(fileName);
+    } catch (error) {
+      console.error('Erreur lors de la génération du rapport:', error);
+      alert("Erreur lors de la génération du rapport PDF.");
+    }
+  };
+
+  // Suppression d'une prédiction de l'historique
+  const handleDeleteHistory = async (id: number) => {
+    setPendingDeleteId(id);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDeleteHistory = async () => {
+    if (!pendingDeleteId) return;
+    try {
+      await fetch(`http://localhost:8000/delete_prediction/${pendingDeleteId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setHistory((prev) => prev.filter((h) => h.id !== pendingDeleteId));
+      if (selectedHistory && selectedHistory.id === pendingDeleteId) setSelectedHistory(null);
+    } catch {
+      alert("Erreur lors de la suppression.");
+    }
+    setShowDeleteModal(false);
+    setPendingDeleteId(null);
+  };
+
+  // Ajoute cette nouvelle fonction pour gérer le téléchargement du rapport historique
+  const handleDownloadHistory = async (historyItem: any) => {
+    try {
+      // Récupère l'email depuis le token JWT
+      const payload = JSON.parse(atob(token.split(".")[1]));
+      const email = payload.sub;
+
+      // Récupère les infos de la prédiction et du profil
+      const [historyRes, userRes] = await Promise.all([
+        fetch(`http://localhost:8000/history_full/${email}`, {
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }),
+        fetch("http://localhost:8000/users", {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+      ]);
+
+      const history = await historyRes.json();
+      const users = await userRes.json();
+      const userInfo = users.find((u: any) => u.email === email);
+      const prediction = history.find((h: any) => h.id === historyItem.id);
+
+      if (!prediction) {
+        alert("Impossible de générer le rapport.");
+        return;
+      }
+
+      // Récupère les JSON nécessaires pour conseils et liens
+      const [adviceJson, linksJson] = await Promise.all([
+        fetch("/disease_advice.json").then(r => r.json()).catch(() => ({})),
+        fetch("/disease_links.json").then(r => r.json()).catch(() => ({}))
+      ]);
+
+      // --- PDF PRO ---
+      const doc = new jsPDF();
+      let y = 20;
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const margin = 18;
+      const sectionSpace = 12;
+
+      // Logo DermaScan AI
+      doc.setFillColor(34, 197, 94); // vert
+      doc.rect(margin, y - 12, 10, 10, 'F');
+      doc.setFillColor(59, 130, 246); // bleu
+      doc.rect(margin + 12, y - 12, 10, 10, 'F');
+      doc.setFontSize(22);
+      doc.setTextColor(34, 197, 94);
+      doc.setFont('helvetica', 'bold');
+      doc.text("DermaScan AI - Rapport d'analyse", pageWidth / 2, y, { align: "center" });
+      y += 10;
+      doc.setDrawColor(34, 197, 94);
+      doc.setLineWidth(1.2);
+      doc.line(margin, y, pageWidth - margin, y);
+      y += 6;
+
+      // --- Infos patient détaillées ---
+      doc.setFontSize(15);
+      doc.setTextColor(59, 130, 246);
+      doc.setFont('helvetica', 'bold');
+      doc.text("Informations du patient", margin, y);
+      y += 7;
+      doc.setDrawColor(200, 230, 201);
+      doc.setLineWidth(0.7);
+      doc.line(margin, y, pageWidth - margin, y);
+      y += 4;
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(12);
+      doc.setTextColor(33, 37, 41);
+      doc.text(`Nom : ${userInfo?.prenom || ""} ${userInfo?.nom || ""}`, margin, y); y += 6;
+      doc.text(`Email : ${userInfo?.email || ""}`, margin, y); y += 6;
+      doc.text(`Téléphone : ${userInfo?.telephone || ""}`, margin, y); y += 6;
+      doc.text(`Sexe : ${userInfo?.sexe || ""}`, margin, y); y += 6;
+      doc.text(`Âge : ${userInfo?.age || ""}`, margin, y); y += sectionSpace;
+
+      // --- Image analysée ---
+      doc.setFontSize(15);
+      doc.setTextColor(34, 197, 94);
+      doc.setFont('helvetica', 'bold');
+      doc.text("Image analysée", margin, y);
+      y += 7;
+      doc.setDrawColor(191, 219, 254);
+      doc.setLineWidth(0.7);
+      doc.line(margin, y, pageWidth - margin, y);
+      y += 4;
+
+      // Ajoute l'image si disponible
+      if (prediction.image_data) {
+        try {
+          const img = new Image();
+          img.src = `data:image/jpeg;base64,${prediction.image_data}`;
+          await new Promise((resolve) => {
+            img.onload = resolve;
+          });
+
+          const maxWidth = pageWidth - 2 * margin;
+          const maxHeight = 60;
+          let imgWidth = img.width;
+          let imgHeight = img.height;
+
+          if (imgWidth > maxWidth) {
+            const ratio = maxWidth / imgWidth;
+            imgWidth = maxWidth;
+            imgHeight = imgHeight * ratio;
+          }
+          if (imgHeight > maxHeight) {
+            const ratio = maxHeight / imgHeight;
+            imgHeight = maxHeight;
+            imgWidth = imgWidth * ratio;
+          }
+
+          const x = (pageWidth - imgWidth) / 2;
+          doc.addImage(img, 'JPEG', x, y, imgWidth, imgHeight);
+          y += imgHeight + 2;
+
+          doc.setFont('helvetica', 'italic');
+          doc.setFontSize(7);
+          doc.setTextColor(100, 100, 100);
+          doc.text("Image analysée par DermaScan AI", pageWidth / 2, y, { align: "center" });
+          y += 3;
+          y += 2;
+        } catch (error) {
+          console.error("Erreur lors de l'ajout de l'image au PDF:", error);
+          doc.setFont('helvetica', 'normal');
+          doc.setFontSize(12);
+          doc.setTextColor(33, 37, 41);
+          doc.text("Image non disponible", margin, y);
+          y += sectionSpace;
+        }
+      } else {
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(12);
+        doc.setTextColor(33, 37, 41);
+        doc.text("Image non disponible", margin, y);
+        y += sectionSpace;
+      }
+
+      // --- Résultat principal ---
+      doc.setFontSize(15);
+      doc.setTextColor(34, 197, 94);
+      doc.setFont('helvetica', 'bold');
+      doc.text("Résultat de l'analyse", margin, y);
+      y += 7;
+      doc.setDrawColor(191, 219, 254);
+      doc.setLineWidth(0.7);
+      doc.line(margin, y, pageWidth - margin, y);
+      y += 4;
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(12);
+      doc.setTextColor(33, 37, 41);
+      const dateStr = prediction.date ? new Date(prediction.date).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' }) : '';
+      doc.text(`Date de l'analyse : ${dateStr}`, margin, y); y += 6;
+      doc.text(`Maladie prédite : ${prediction.predicted_class}`, margin, y); y += 6;
+      let confVal = '';
+      if (typeof prediction.confidence === 'number') {
+        confVal = (prediction.confidence <= 1 ? (prediction.confidence * 100).toFixed(1) : prediction.confidence.toFixed(1)) + '%';
+      } else if (typeof prediction.confidence === 'string') {
+        const numConf = parseFloat(prediction.confidence);
+        if (!isNaN(numConf)) {
+          confVal = (numConf <= 1 ? (numConf * 100).toFixed(1) : numConf.toFixed(1)) + '%';
+        } else {
+          confVal = prediction.confidence;
+        }
+      }
+      doc.text(`Confiance : ${confVal}`, margin, y); y += sectionSpace;
+
+      // --- Conseils médicaux ---
+      doc.setFontSize(15);
+      doc.setTextColor(34, 197, 94);
+      doc.setFont('helvetica', 'bold');
+      doc.text("Conseils médicaux", margin, y);
+      y += 7;
+      doc.setDrawColor(191, 219, 254);
+      doc.setLineWidth(0.7);
+      doc.line(margin, y, pageWidth - margin, y);
+      y += 4;
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(12);
+      doc.setTextColor(33, 37, 41);
+
+      // Recherche des conseils dans le JSON
+      const adviceKey = Object.keys(adviceJson).find(k => prediction.predicted_class.includes(k));
+      if (adviceKey && adviceJson[adviceKey]) {
+        const advice = adviceJson[adviceKey];
+        if (advice.description) {
+          doc.text("Description :", margin, y); y += 6;
+          const descLines = doc.splitTextToSize(advice.description, pageWidth - 2 * margin);
+          doc.text(descLines, margin, y); y += descLines.length * 6;
+        }
+        if (Array.isArray(advice.conseils)) {
+          doc.text("Conseils :", margin, y); y += 6;
+          advice.conseils.forEach((conseil: string) => {
+            const lines = doc.splitTextToSize(`• ${conseil}`, pageWidth - 2 * margin);
+            doc.text(lines, margin, y); y += lines.length * 6;
+          });
+        }
+        if (advice.gravite) {
+          doc.text(`Gravité : ${advice.gravite}`, margin, y); y += 6;
+        }
+        if (advice.recommandation) {
+          doc.text("Recommandation :", margin, y); y += 6;
+          const recLines = doc.splitTextToSize(advice.recommandation, pageWidth - 2 * margin);
+          doc.text(recLines, margin, y); y += recLines.length * 6;
+        }
+      } else {
+        doc.text("Aucun conseil spécifique disponible pour cette maladie.", margin, y); y += 6;
+      }
+      y += sectionSpace;
+
+      // --- Liens utiles ---
+      // Recherche des liens dans le JSON
+      const linksKey = Object.keys(linksJson).find(k => prediction.predicted_class.includes(k));
+      const diseaseLinks = linksKey ? linksJson[linksKey] : null;
+
+      if (diseaseLinks && Array.isArray(diseaseLinks) && diseaseLinks.length > 0) {
+        // Vérifie si on a besoin d'une nouvelle page
+        if (y > 250) {
+          doc.addPage();
+          y = 20;
+        }
+
+        doc.setFontSize(15);
+        doc.setTextColor(34, 197, 94);
+        doc.setFont('helvetica', 'bold');
+        doc.text("Liens utiles", margin, y);
+        y += 7;
+        doc.setDrawColor(191, 219, 254);
+        doc.setLineWidth(0.7);
+        doc.line(margin, y, pageWidth - margin, y);
+        y += 4;
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(12);
+        doc.setTextColor(33, 37, 41);
+
+        diseaseLinks.forEach((link: any) => {
+          // Vérifie si on a besoin d'une nouvelle page
+          if (y > 250) {
+            doc.addPage();
+            y = 20;
+          }
+
+          // Titre du lien
+          const titleLines = doc.splitTextToSize(`• ${link.title}`, pageWidth - 2 * margin);
+          doc.text(titleLines, margin, y);
+          y += titleLines.length * 6;
+
+          // URL du lien (cliquable)
+          doc.setFontSize(10);
+          doc.setTextColor(59, 130, 246); // Bleu pour indiquer que c'est un lien
+          const urlLines = doc.splitTextToSize(`  ${link.url}`, pageWidth - 2 * margin);
+          doc.text(urlLines, margin, y);
+          // Ajoute le lien cliquable
+          doc.link(margin, y - urlLines.length * 5, pageWidth - 2 * margin, urlLines.length * 5, { url: link.url });
+          y += urlLines.length * 5;
+
+          // Réinitialise la taille et la couleur
+          doc.setFontSize(12);
+          doc.setTextColor(33, 37, 41);
+          y += 4; // Espace entre les liens
+        });
+      }
+
+      // --- Médecins recommandés ---
+      // Vérifie si on a besoin d'une nouvelle page
+      if (y > 250) {
+        doc.addPage();
+        y = 20;
+      }
+
+      doc.setFontSize(15);
+      doc.setTextColor(34, 197, 94);
+      doc.setFont('helvetica', 'bold');
+      doc.text("Médecins recommandés", margin, y);
+      y += 7;
+      doc.setDrawColor(191, 219, 254);
+      doc.setLineWidth(0.7);
+      doc.line(margin, y, pageWidth - margin, y);
+      y += 4;
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(12);
+      doc.setTextColor(33, 37, 41);
+
+      try {
+        // Fonction pour déterminer la spécialité en fonction de la maladie
+        const getSpecialty = (disease: string) => {
+          if (!disease) return "dermatologue";
+          const d = disease.toLowerCase();
+          if (
+            d.includes("acne") ||
+            d.includes("eczema") ||
+            d.includes("psoriasis") ||
+            d.includes("melanoma") ||
+            d.includes("dermatitis") ||
+            d.includes("keratosis") ||
+            d.includes("tinea") ||
+            d.includes("warts") ||
+            d.includes("seborrheic")
+          ) {
+            return "dermatologue";
+          }
+          return "médecin";
+        };
+
+        const specialty = getSpecialty(prediction.predicted_class);
+        const service = new window.google.maps.places.PlacesService(document.createElement("div"));
+        const userPos = await new Promise<{lat: number, lng: number}>((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(
+            pos => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+            err => reject(new Error("Impossible de récupérer la position de l'utilisateur."))
+          );
+        });
+
+        let doctors = [];
+        try {
+          doctors = await new Promise<any[]>((resolve) => {
+            service.nearbySearch(
+              {
+                location: userPos,
+                radius: 5000,
+                keyword: specialty,
+                type: "doctor"
+              },
+              (results: any, status: any) => {
+                if (status === "OK" && Array.isArray(results)) {
+                  resolve(results.slice(0, 3));
+                } else {
+                  resolve([]);
+                }
+              }
+            );
+          });
+        } catch (error) {
+          doc.text("Impossible de récupérer la liste des médecins (géolocalisation refusée ou indisponible).", margin, y);
+          y += 6;
+        }
+
+        if (doctors.length > 0) {
+          doctors.forEach((doctor, index) => {
+            if (y > 250) {
+              doc.addPage();
+              y = 20;
+            }
+
+            doc.setFont('helvetica', 'bold');
+            const nameLines = doc.splitTextToSize(`${index + 1}. ${doctor.name}`, pageWidth - 2 * margin);
+            doc.text(nameLines, margin, y);
+            y += nameLines.length * 6;
+
+            doc.setFont('helvetica', 'normal');
+            const addressLines = doc.splitTextToSize(`   Adresse : ${doctor.vicinity}`, pageWidth - 2 * margin);
+            doc.text(addressLines, margin, y);
+            y += addressLines.length * 6;
+
+            y += 4;
+          });
+        } else {
+          doc.text("Aucun médecin trouvé à proximité.", margin, y);
+          y += 6;
+        }
+      } catch (error) {
+        console.error("Erreur lors de la récupération des médecins:", error);
+        doc.text("Impossible de récupérer la liste des médecins.", margin, y);
+        y += 6;
+      }
+
+      y += 10;
+      doc.setFont('helvetica', 'italic');
+      doc.setTextColor(100, 100, 100);
+      doc.setFontSize(11);
+      doc.text("Merci d'utiliser DermaScan AI.", margin, y);
+
+      // Pied de page
+      doc.setFontSize(9);
+      doc.setTextColor(180, 180, 180);
+      doc.text("Rapport généré automatiquement - DermaScan AI", pageWidth / 2, 290, { align: "center" });
+
+      // Sauvegarde du PDF
+      const fileName = `rapport_${userInfo?.nom || "patient"}_${prediction.id}.pdf`;
       doc.save(fileName);
     } catch (error) {
       console.error('Erreur lors de la génération du rapport:', error);

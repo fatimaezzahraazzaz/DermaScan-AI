@@ -108,6 +108,31 @@ def get_db():
     finally:
         db.close()
 
+# Créer un utilisateur admin par défaut s'il n'existe pas
+def create_default_admin():
+    db = SessionLocal()
+    try:
+        admin_user = db.query(User).filter(User.email == "admin@dermascan.com").first()
+        if not admin_user:
+            hashed_password = get_password_hash("admin")
+            admin_user = User(
+                email="admin@dermascan.com",
+                hashed_password=hashed_password,
+                nom="Administrateur",
+                prenom="Admin",
+                role="admin"
+            )
+            db.add(admin_user)
+            db.commit()
+            print("Utilisateur admin créé avec succès")
+    except Exception as e:
+        print(f"Erreur lors de la création de l'admin: {e}")
+    finally:
+        db.close()
+
+# Créer l'admin au démarrage
+create_default_admin()
+
 # FastAPI router
 router = APIRouter()
 
@@ -182,6 +207,44 @@ def list_users(db: Session = Depends(get_db)):
         }
         for user in users
     ]
+
+@router.delete("/users/{user_id}")
+def delete_user(user_id: int, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
+    
+    # Empêcher la suppression de l'admin
+    if user.role == "admin":
+        raise HTTPException(status_code=403, detail="Impossible de supprimer l'administrateur")
+    
+    # Supprimer d'abord toutes les prédictions associées
+    db.query(Prediction).filter(Prediction.user_id == user_id).delete()
+    
+    # Puis supprimer l'utilisateur
+    db.delete(user)
+    db.commit()
+    return {"msg": "Utilisateur supprimé avec succès"}
+
+@router.put("/users/{user_id}")
+def update_user(user_id: int, update_data: dict, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
+    
+    # Empêcher la modification du rôle admin
+    if user.role == "admin" and "role" in update_data and update_data["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Impossible de modifier le rôle de l'administrateur")
+    
+    # Mettre à jour les champs autorisés
+    allowed_fields = ["nom", "prenom", "age", "sexe", "telephone", "role"]
+    for field in allowed_fields:
+        if field in update_data:
+            setattr(user, field, update_data[field])
+    
+    db.commit()
+    db.refresh(user)
+    return {"msg": "Utilisateur mis à jour avec succès"}
 
 @router.get("/history/{email}", response_model=list[PredictionOut])
 def get_history(email: str, db: Session = Depends(get_db)):

@@ -108,6 +108,7 @@ const Register: React.FC = () => {
       onSubmit={handleRegister}
       className="w-full max-w-lg md:max-w-md sm:max-w-xs bg-white/90 rounded-3xl shadow-2xl p-8 md:p-10 animate-fade-in flex flex-col items-center relative overflow-hidden"
       style={{ minWidth: 280 }}
+      autoComplete="off"
     >
       {/* Box message de succès ou d'erreur */}
       {successMsg && (
@@ -151,6 +152,7 @@ const Register: React.FC = () => {
             value={form.nom}
             onChange={handleChange}
             required
+            autoComplete="off"
           />
           {errors.nom && <div className="text-red-600 text-sm mt-1">{errors.nom}</div>}
           <input
@@ -161,6 +163,7 @@ const Register: React.FC = () => {
             value={form.prenom}
             onChange={handleChange}
             required
+            autoComplete="off"
           />
           {errors.prenom && <div className="text-red-600 text-sm mt-1">{errors.prenom}</div>}
         </div>
@@ -174,6 +177,7 @@ const Register: React.FC = () => {
             onChange={handleChange}
             min={0}
             required
+            autoComplete="off"
           />
           {errors.age && <div className="text-red-600 text-sm mt-1">{errors.age}</div>}
           <select
@@ -182,6 +186,7 @@ const Register: React.FC = () => {
             value={form.sexe}
             onChange={handleChange}
             required
+            autoComplete="off"
           >
             <option value="">Sexe</option>
             <option value="Homme">Homme</option>
@@ -199,6 +204,7 @@ const Register: React.FC = () => {
           onChange={handleChange}
           pattern="\d{10,15}"
           required
+          autoComplete="off"
         />
         {errors.telephone && <div className="text-red-600 text-sm mt-1">{errors.telephone}</div>}
         <input
@@ -209,6 +215,7 @@ const Register: React.FC = () => {
           value={form.email}
           onChange={e => { setForm({ ...form, email: e.target.value }); validateField("email", e.target.value); }}
           required
+          autoComplete="off"
         />
         {errors.email && <div className="text-red-600 text-sm mt-1">{errors.email}</div>}
         <input
@@ -219,6 +226,7 @@ const Register: React.FC = () => {
           value={form.password}
           onChange={handleChange}
           required
+          autoComplete="new-password"
         />
         {errors.password && <div className="text-red-600 text-sm mt-1">{errors.password}</div>}
         <select
@@ -227,6 +235,7 @@ const Register: React.FC = () => {
           value={form.role}
           onChange={handleChange}
           required
+          autoComplete="off"
         >
           <option value="">Rôle</option>
           <option value="patient">Patient</option>

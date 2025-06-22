@@ -4,19 +4,20 @@ import Login from "./components/auth/Login";
 import Register from "./components/auth/Register";
 import Patient from "./Patient";
 import Medecin from "./Medecin";
+import UserManagement from "./components/UserManagement";
 import { jwtDecode, type JwtPayload } from "jwt-decode";
 import { Shield, Stethoscope, AlertTriangle, CheckCircle2, Clock, Sparkles, Users, Award, Zap, ChevronDown, ChevronUp, ImagePlus } from "lucide-react";
 
 // Déclaration d'interface étendue pour JwtPayload
 interface CustomJwtPayload extends JwtPayload {
-  role?: 'patient' | 'medecin';
+  role?: 'patient' | 'medecin' | 'admin';
 }
 
 const App: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [token, setToken] = useState<string | null>(localStorage.getItem("token"));
-  const [userRole, setUserRole] = useState<'patient' | 'medecin' | null>(null);
+  const [userRole, setUserRole] = useState<'patient' | 'medecin' | 'admin' | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
@@ -24,6 +25,22 @@ const App: React.FC = () => {
     const savedToken = localStorage.getItem("token");
     if (savedToken) setToken(savedToken);
   }, []);
+
+  // Raccourci clavier pour accéder à l'admin
+  useEffect(() => {
+    const handleKeyPress = (event: KeyboardEvent) => {
+      // Ctrl+Shift+A pour accéder à l'admin
+      if (event.ctrlKey && event.shiftKey && event.key === 'A') {
+        event.preventDefault();
+        navigate("/login?role=admin");
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => {
+      window.removeEventListener('keydown', handleKeyPress);
+    };
+  }, [navigate]);
 
   const handleLoginSuccess = (token: string) => {
     setToken(token);
@@ -34,16 +51,17 @@ const App: React.FC = () => {
     setUserRole(payload.role);
     setUserEmail(payload.email);
     if (payload.role === "medecin") navigate("/medecin");
+    else if (payload.role === "admin") navigate("/admin");
     else navigate("/patient");
   };
 
   // Helper pour extraire l'email et le rôle du token JWT
-  function emailAndRoleFromToken(token: string): { email: string | null, role: "patient" | "medecin" | null } {
+  function emailAndRoleFromToken(token: string): { email: string | null, role: "patient" | "medecin" | "admin" | null } {
     try {
       const decoded = jwtDecode(token) as CustomJwtPayload; // Caster en CustomJwtPayload
       return {
         email: decoded.sub || null,
-        role: decoded.role === "medecin" ? "medecin" : decoded.role === "patient" ? "patient" : null
+        role: decoded.role === "medecin" ? "medecin" : decoded.role === "admin" ? "admin" : decoded.role === "patient" ? "patient" : null
       };
     } catch {
       return { email: null, role: null };
@@ -54,7 +72,10 @@ const App: React.FC = () => {
     setToken(null);
     localStorage.removeItem("token");
     setUserRole(null);
+    setUserEmail(null);
     navigate("/");
+    // Forcer le rechargement de la page pour s'assurer que l'état est réinitialisé
+    window.location.reload();
   };
 
   const isTokenValid = (token: string) => {
@@ -172,7 +193,7 @@ const App: React.FC = () => {
                 </li>
               </ul>
               <a
-                href="/login"
+                href="/login?role=patient"
                 className="block w-full text-center bg-blue-600 text-white py-2 rounded-xl font-semibold hover:bg-blue-700 transition-colors"
               >
                 Se connecter
@@ -199,17 +220,24 @@ const App: React.FC = () => {
                   <span>Historique des patients</span>
                 </li>
                 <li className="flex items-center gap-2 text-gray-700">
-                  <AlertTriangle className="w-5 h-5 text-yellow-500" />
-                  <span>Détection précoce</span>
+                  <Shield className="w-5 h-5 text-purple-500" />
+                  <span>Rapports détaillés</span>
                 </li>
               </ul>
               <a
-                href="/login"
+                href="/login?role=medecin"
                 className="block w-full text-center bg-green-600 text-white py-2 rounded-xl font-semibold hover:bg-green-700 transition-colors"
               >
                 Se connecter
               </a>
             </div>
+          </div>
+
+          {/* Accès admin secret - invisible pour les utilisateurs normaux */}
+          <div className="text-center mb-8">
+            <p className="text-xs text-gray-400 opacity-30">
+              Développeur ? Appuyez sur Ctrl+Shift+A pour accéder à l'administration
+            </p>
           </div>
 
           {/* Section Processus d'utilisation */}
@@ -277,6 +305,14 @@ const App: React.FC = () => {
 
           <div className="text-center text-gray-500 mt-auto">
             <p>Une solution innovante pour la santé de votre peau</p>
+            {/* Bouton admin discret pour les développeurs */}
+            <button
+              onClick={() => navigate("/login?role=admin")}
+              className="mt-2 text-xs text-gray-400 hover:text-gray-600 transition-colors opacity-30 hover:opacity-100"
+              title="Accès administrateur (développeur uniquement)"
+            >
+              Admin
+            </button>
           </div>
         </div>
       </div>
@@ -385,6 +421,42 @@ const App: React.FC = () => {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/admin"
+        element={
+          <ProtectedRoute>
+            <div className="min-h-screen w-screen bg-gradient-to-b from-purple-100 via-white to-red-50 flex flex-col items-center justify-center relative">
+              <div className="absolute top-4 right-4">
+                <LogoutButton />
+              </div>
+              <div className="absolute top-4 left-4 bg-purple-100 text-purple-700 px-4 py-2 rounded shadow">
+                {userEmail && <>Connecté avec : <b>{userEmail}</b></>}
+              </div>
+              <div className="w-full flex items-center justify-center">
+                <UserManagement token={token!} />
+              </div>
+            </div>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/users"
+        element={
+          <ProtectedRoute>
+            <div className="min-h-screen w-screen bg-gradient-to-b from-blue-100 via-white to-green-50 flex flex-col items-center justify-center relative">
+              <div className="absolute top-4 right-4">
+                <LogoutButton />
+              </div>
+              <div className="absolute top-4 left-4 bg-purple-100 text-purple-700 px-4 py-2 rounded shadow">
+                {userEmail && <>Connecté avec : <b>{userEmail}</b></>}
+              </div>
+              <div className="w-full flex items-center justify-center">
+                <UserManagement token={token!} />
+              </div>
+            </div>
+          </ProtectedRoute>
+        }
+      />
     </Routes>
   );
 };
@@ -397,6 +469,8 @@ const LogoutButton = () => {
     localStorage.removeItem("token");
     // Rediriger vers App.tsx (par exemple la page d'accueil ou de login)
     navigate("/");
+    // Forcer le rechargement de la page pour s'assurer que l'état est réinitialisé
+    window.location.reload();
   };
 
   return <button onClick={handleLogout}>Déconnexion</button>;
