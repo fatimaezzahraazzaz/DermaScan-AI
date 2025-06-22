@@ -1,0 +1,90 @@
+{
+  "Eczema": {
+    "Apparence": "Rougeurs, démangeaisons, sécheresse, parfois suintement",
+    "Localisation typique": "Mains, plis (genoux, coudes), visage",
+    "Symptômes": "Démangeaisons intenses, inflammation",
+    "Évolution": "Chronique avec poussées",
+    "Contagieux": "Non",
+    "Traitement": "Hydratation, corticoïdes topiques, éviter les irritants"
+  },
+  "Warts Molluscum and other Viral Infections": {
+    "Apparence": "Excroissances rugueuses ou lisses, souvent rondes",
+    "Localisation typique": "Mains, pieds, visage, parties génitales",
+    "Symptômes": "Peut être douloureux ou inesthétique",
+    "Évolution": "Peut disparaître spontanément ou persister",
+    "Contagieux": "Oui",
+    "Traitement": "Cryothérapie, acide salicylique, curetage"
+  },
+  "Melanoma": {
+    "Apparence": "Taches pigmentées irrégulières, multicolores",
+    "Localisation typique": "Tronc, jambes, visage, dos",
+    "Symptômes": "Changement de taille, forme, couleur",
+    "Évolution": "Rapide, haut risque de métastase",
+    "Contagieux": "Non",
+    "Traitement": "Chirurgie rapide, immunothérapie, surveillance dermatologique"
+  },
+  "Atopic Dermatitis": {
+    "Apparence": "Peau sèche, rouge, épaissie",
+    "Localisation typique": "Visage, cou, plis des bras et jambes",
+    "Symptômes": "Prurit sévère, grattage",
+    "Évolution": "Commence souvent dans l'enfance, chronique",
+    "Contagieux": "Non",
+    "Traitement": "Crèmes hydratantes, corticoïdes, éviction allergénique"
+  },
+  "Basal Cell Carcinoma (BCC)": {
+    "Apparence": "Nodule perlé, plaie persistante, parfois croûte",
+    "Localisation typique": "Zones exposées au soleil : visage, cou",
+    "Symptômes": "Croissance lente, rarement douloureux",
+    "Évolution": "Croissance locale, rarement métastatique",
+    "Contagieux": "Non",
+    "Traitement": "Excision chirurgicale, curetage, cryothérapie"
+  },
+  "Melanocytic Nevi (NV)": {
+    "Apparence": "Petite tache pigmentée, régulière",
+    "Localisation typique": "Partout sur la peau",
+    "Symptômes": "Asymptomatique",
+    "Évolution": "Stable, peut évoluer lentement",
+    "Contagieux": "Non",
+    "Traitement": "Surveillance ou retrait si douteux"
+  },
+  "Benign Keratosis-like Lesions (BKL)": {
+    "Apparence": "Plaques épaisses, brunâtres, aspect verruqueux",
+    "Localisation typique": "Visage, tronc, dos",
+    "Symptômes": "Asymptomatique ou légèrement irrité",
+    "Évolution": "Stable, sans danger",
+    "Contagieux": "Non",
+    "Traitement": "Souvent inutile, possible retrait pour esthétique"
+  },
+  "Psoriasis": {
+    "Apparence": "Plaques rouges épaisses avec squames argentées",
+    "Localisation typique": "Coudes, genoux, cuir chevelu, dos",
+    "Symptômes": "Démangeaisons, sécheresse, fissures",
+    "Évolution": "Chronique, par poussées",
+    "Contagieux": "Non",
+    "Traitement": "Photothérapie, topiques, immunosuppresseurs"
+  },
+  "Seborrheic Keratoses and other Benign Tumors": {
+    "Apparence": "Taches brunes ou noires surélevées, cireuses",
+    "Localisation typique": "Dos, torse, visage",
+    "Symptômes": "Généralement asymptomatique",
+    "Évolution": "Stable ou croissance lente",
+    "Contagieux": "Non",
+    "Traitement": "Retrait optionnel pour confort ou diagnostic"
+  },
+  "Tinea Ringworm Candidiasis and other Fungal Infections": {
+    "Apparence": "Anneau rouge, peau qui pèle ou fissures",
+    "Localisation typique": "Pieds, aine, tronc",
+    "Symptômes": "Démangeaisons, irritation",
+    "Évolution": "Régressive avec traitement",
+    "Contagieux": "Oui",
+    "Traitement": "Antifongiques topiques ou oraux"
+  },
+  "Acne": {
+    "Apparence": "Comédons, papules, pustules, kystes",
+    "Localisation typique": "Visage, dos, poitrine",
+    "Symptômes": "Inflammation, douleur locale",
+    "Évolution": "Variable, souvent chez les adolescents",
+    "Contagieux": "Non",
+    "Traitement": "Nettoyage, antibiotiques, rétinoïdes, traitements hormonaux"
+  }
+}

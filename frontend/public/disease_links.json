@@ -1,0 +1,112 @@
+{
+  "Eczema": [
+    {
+      "title": "Comprendre l'eczéma - DermNet",
+      "url": "https://www.elsan.care/fr/pathologie-et-traitement/maladies-de-la-peau/eczema%7Ccauses%7Ctraitements"
+    },
+    {
+      "title": "Eczema - Mayo Clinic",
+      "url": "https://www.mayoclinic.org/diseases-conditions/atopic-dermatitis-eczema/symptoms-causes/syc-20353273"
+    }
+  ],
+  "Warts Molluscum and other Viral Infections": [
+    {
+      "title": "Warts and Verrucas - DermNet",
+      "url": "https://www.nhsinform.scot/illnesses-and-conditions/skin-hair-and-nails/warts-and-verrucas/"
+    },
+    {
+      "title": "Molluscum Contagiosum - WebMD",
+      "url": "https://dermnetnz.org/topics/molluscum-contagiosum"
+    }
+  ],
+  "Melanoma": [
+    {
+      "title": "Melanoma Overview - Cancer.net",
+      "url": "https://www.mayoclinic.org/diseases-conditions/melanoma/symptoms-causes/syc-20374884"
+    },
+    {
+      "title": "Melanoma - DermNet",
+      "url": "https://dermnetnz.org/topics/melanoma/"
+    }
+  ],
+  "Atopic Dermatitis": [
+    {
+      "title": "Atopic Dermatitis - WebMD",
+      "url": "https://my.clevelandclinic.org/health/diseases/24299-atopic-dermatitis"
+    },
+    {
+      "title": "Atopic Dermatitis - Mayo Clinic",
+      "url": "https://www.mayoclinic.org/diseases-conditions/atopic-dermatitis-eczema/symptoms-causes/syc-20353273"
+    }
+  ],
+  "Basal Cell Carcinoma (BCC)": [
+    {
+      "title": "Basal Cell Carcinoma - DermNet",
+      "url": "https://dermnetnz.org/topics/basal-cell-carcinoma/"
+    },
+    {
+      "title": "Basal Cell Carcinoma - American Cancer Society",
+      "url": "https://www.cancer.org/cancer/types/basal-and-squamous-cell-skin-cancer.html"
+    }
+  ],
+  "Melanocytic Nevi (NV)": [
+    {
+      "title": "Melanocytic Naevi - DermNet",
+      "url": "https://dermnetnz.org/topics/melanocytic-naevus"
+    },
+    {
+      "title": "Moles (Nevi) - American Academy of Dermatology",
+      "url": "https://www.aad.org/public/diseases/a-z/moles-overview"
+    }
+  ],
+  "Benign Keratosis-like Lesions (BKL)": [
+    {
+      "title": "Seborrhoeic keratosis - DermNet",
+      "url": "https://dermnetnz.org/topics/seborrhoeic-keratosis/"
+    },
+    {
+      "title": "Benign Skin Lesions - Cleveland Clinic",
+      "url": "https://www.aafp.org/pubs/afp/issues/2003/0215/p729.html"
+    }
+  ],
+  "Psoriasis": [
+    {
+      "title": "Psoriasis - Mayo Clinic",
+      "url": "https://www.mayoclinic.org/diseases-conditions/psoriasis/symptoms-causes/syc-20355840"
+    },
+    {
+      "title": "Psoriasis - DermNet",
+      "url": "https://dermnetnz.org/topics/psoriasis/"
+    }
+  ],
+  "Seborrheic Keratoses and other Benign Tumors": [
+    {
+      "title": "Seborrheic Keratosis - Mayo Clinic",
+      "url": "https://www.mayoclinic.org/diseases-conditions/seborrheic-keratosis/symptoms-causes/syc-20353878"
+    },
+    {
+      "title": "Benign Skin Tumors - DermNet",
+      "url": "https://patient.info/doctor/benign-skin-tumours"
+    }
+  ],
+  "Tinea Ringworm Candidiasis and other Fungal Infections": [
+    {
+      "title": "Ringworm (Tinea) - CDC",
+      "url": "https://www.mayoclinic.org/diseases-conditions/ringworm-body/symptoms-causes/syc-20353780"
+    },
+    {
+      "title": "Candidiasis - DermNet",
+      "url": "https://dermnetnz.org/topics/candida"
+    }
+  ],
+  "Acne": [
+    {
+      "title": "Acne - Mayo Clinic",
+      "url": "https://www.mayoclinic.org/diseases-conditions/acne/symptoms-causes/syc-20368047"
+    },
+    {
+      "title": "Acne - DermNet",
+      "url": "https://dermnetnz.org/topics/acne/"
+    }
+  ]
+}

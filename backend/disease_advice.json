@@ -1,0 +1,112 @@
+{
+  "Eczema": {
+    "description": "L'eczéma est une inflammation de la peau provoquant rougeurs, démangeaisons et sécheresse.",
+    "conseils": [
+      "Hydratez régulièrement la peau avec une crème émolliente.",
+      "Évitez les savons agressifs et les bains chauds.",
+      "Portez des vêtements en coton doux."
+    ],
+    "gravite": "Souvent bénin mais peut être chronique.",
+    "recommandation": "Consultez si les plaques s'étendent ou résistent aux soins de base."
+  },
+  "Warts": {
+    "description": "Les verrues sont des excroissances bénignes causées par un virus (HPV).",
+    "conseils": [
+      "Évitez de gratter ou de couper la verrue.",
+      "Utilisez un traitement local recommandé en pharmacie.",
+      "Gardez la zone propre et couverte si nécessaire."
+    ],
+    "gravite": "Bénin, mais peut être contagieux.",
+    "recommandation": "Consultez un médecin si la verrue saigne ou se multiplie."
+  },
+  "Melanoma": {
+    "description": "Le mélanome est un cancer grave de la peau, souvent lié à l'exposition solaire.",
+    "conseils": [
+      "Surveillez les grains de beauté suspects (forme, taille, couleur).",
+      "Protégez votre peau du soleil (crème solaire, vêtements).",
+      "Évitez les cabines UV."
+    ],
+    "gravite": "Grave et potentiellement mortel sans traitement rapide.",
+    "recommandation": "Consultez un dermatologue immédiatement si vous soupçonnez un mélanome."
+  },
+  "Atopic": {
+    "description": "La dermatite atopique est une forme chronique d'eczéma souvent liée à des allergies.",
+    "conseils": [
+      "Hydratez la peau chaque jour, surtout après la douche.",
+      "Évitez les allergènes connus (acariens, pollen, etc.).",
+      "Utilisez des vêtements doux et respirants."
+    ],
+    "gravite": "Chronique mais généralement contrôlable.",
+    "recommandation": "Suivi médical conseillé si les poussées sont fréquentes."
+  },
+  "Basal": {
+    "description": "Le carcinome basocellulaire est un cancer de la peau fréquent mais peu agressif.",
+    "conseils": [
+      "Surveillez toute plaie qui ne guérit pas.",
+      "Protégez la peau du soleil.",
+      "Consultez régulièrement pour un suivi dermatologique."
+    ],
+    "gravite": "Grave localement mais rarement métastatique.",
+    "recommandation": "Un diagnostic médical est indispensable."
+  },
+  "Melanocytic": {
+    "description": "Les nævus mélanocytaires sont des grains de beauté bénins.",
+    "conseils": [
+      "Surveillez les modifications de forme ou de couleur.",
+      "Protégez votre peau du soleil.",
+      "Consultez en cas de saignement ou de démangeaison inhabituelle."
+    ],
+    "gravite": "Généralement bénin.",
+    "recommandation": "Contrôle annuel recommandé chez le dermatologue."
+  },
+  "Benign": {
+    "description": "Les lésions kératosiques bénignes sont des croûtes ou verrues inoffensives liées à l’âge.",
+    "conseils": [
+      "Ne pas gratter ces lésions.",
+      "Évitez l'exposition excessive au soleil.",
+      "Gardez la peau hydratée."
+    ],
+    "gravite": "Bénin.",
+    "recommandation": "Consultez en cas de doute ou d’évolution anormale."
+  },
+  "Psoriasis": {
+    "description": "Le psoriasis est une maladie inflammatoire chronique de la peau.",
+    "conseils": [
+      "Appliquez des crèmes hydratantes et/ou corticoïdes sur prescription.",
+      "Réduisez le stress et évitez les irritants.",
+      "Exposez la peau à la lumière naturelle avec prudence."
+    ],
+    "gravite": "Chronique mais non contagieuse.",
+    "recommandation": "Un traitement régulier améliore nettement la qualité de vie."
+  },
+  "Seborrheic": {
+    "description": "Les kératoses séborrhéiques sont des excroissances bénignes fréquentes chez les personnes âgées.",
+    "conseils": [
+      "Ne pas tenter de retirer la lésion soi-même.",
+      "Protégez la zone contre les frottements.",
+      "Hydratez doucement si la peau devient sèche."
+    ],
+    "gravite": "Sans danger.",
+    "recommandation": "Consultez pour confirmation du diagnostic."
+  },
+  "Tinea": {
+    "description": "Les infections fongiques comme la teigne ou la candidose provoquent des rougeurs et démangeaisons.",
+    "conseils": [
+      "Gardez la peau propre et sèche.",
+      "Utilisez des antifongiques en crème selon prescription.",
+      "Changez régulièrement de vêtements."
+    ],
+    "gravite": "Contagieux mais bénin si traité rapidement.",
+    "recommandation": "Consultez si l’infection persiste après 2 semaines de traitement."
+  },
+  "acne": {
+    "description": "L’acné est une affection cutanée fréquente liée aux hormones et à l’excès de sébum.",
+    "conseils": [
+      "Nettoyez la peau avec un gel doux deux fois par jour.",
+      "Évitez de percer les boutons.",
+      "Utilisez des produits non comédogènes."
+    ],
+    "gravite": "Souvent bénin, mais peut laisser des cicatrices.",
+    "recommandation": "Consultez si l'acné est modérée à sévère ou persistante."
+  }
+}
