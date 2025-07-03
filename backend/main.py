@@ -22,10 +22,36 @@ import os
 import uuid
 from tensorflow.keras.applications.densenet import preprocess_input
 import re
+from fastapi.exceptions import RequestValidationError
+from pydantic import ValidationError
 
 Base = declarative_base()
 
 app = FastAPI()
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request, exc):
+    print("=== ERREUR DE VALIDATION ===")
+    print("Erreur complète:", exc)
+    print("Erreurs détaillées:", exc.errors())
+    print("Body reçu:", exc.body)
+    print("=== FIN ERREUR ===")
+    return JSONResponse(
+        status_code=422,
+        content={"detail": exc.errors(), "body": exc.body}
+    )
+
+@app.exception_handler(ValidationError)
+async def pydantic_validation_exception_handler(request, exc):
+    print("=== ERREUR PYDANTIC ===")
+    print("Erreur complète:", exc)
+    print("Erreurs détaillées:", exc.errors())
+    print("=== FIN ERREUR ===")
+    return JSONResponse(
+        status_code=422,
+        content={"detail": exc.errors()}
+    )
+
 import json
 with open("disease_advice.json", "r", encoding="utf-8") as f:
     disease_advice = json.load(f)

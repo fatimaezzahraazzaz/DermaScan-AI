@@ -1,11 +1,13 @@
 from fastapi import APIRouter, HTTPException, Depends, status, Request, UploadFile, File, Header
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 from sqlalchemy import Column, Integer, String, create_engine, ForeignKey, Text  # Ajoute Text
 from sqlalchemy.orm import sessionmaker, declarative_base, Session, relationship
 from passlib.context import CryptContext
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
 import inspect
+from fastapi.responses import JSONResponse
+from fastapi.exceptions import RequestValidationError
 
 # Configuration
 SECRET_KEY = "TON_SECRET_KEY_SUPER_SECRET"  # change ça !
@@ -74,6 +76,13 @@ class UserLogin(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str
+
+class UserProfileUpdate(BaseModel):
+    nom: str | None = None
+    prenom: str | None = None
+    age: str | int | None = None
+    sexe: str | None = None
+    telephone: str | None = None
 
 class PredictionOut(BaseModel):
     id: int
@@ -208,6 +217,47 @@ def list_users(db: Session = Depends(get_db)):
         for user in users
     ]
 
+@router.put("/users/update_profile")
+def update_profile(
+    update: UserProfileUpdate,
+    authorization: str = Header(None),
+    db: Session = Depends(get_db)
+):
+    print("=== DEBUG UPDATE PROFILE ===")
+    print("Headers reçus:", authorization)
+    print("Données reçues:", update)
+    print("Type des données:", type(update))
+    print("Dict des données:", update.dict())
+    
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Token manquant")
+    token = authorization.split(" ")[1]
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        email = payload.get("sub")
+    except Exception:
+        raise HTTPException(status_code=401, detail="Token invalide")
+    user = db.query(User).filter(User.email == email).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
+    
+    # Convertir le modèle Pydantic en dict et filtrer les valeurs None
+    update_data = update.dict(exclude_unset=True)
+    print("Données à mettre à jour:", update_data)
+    
+    # Met à jour les champs si présents dans la requête
+    for field in ["nom", "prenom", "sexe", "age", "telephone"]:
+        if field in update_data:
+            # Convertir l'âge en string si c'est un nombre
+            if field == "age" and isinstance(update_data[field], (int, float)):
+                setattr(user, field, str(update_data[field]))
+            else:
+                setattr(user, field, update_data[field])
+    db.commit()
+    db.refresh(user)
+    print("=== FIN DEBUG ===")
+    return {"msg": "Profil mis à jour"}
+
 @router.delete("/users/{user_id}")
 def delete_user(user_id: int, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.id == user_id).first()
@@ -253,31 +303,6 @@ def get_history(email: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
     # Trie l'historique du plus récent au plus ancien
     return sorted(user.predictions, key=lambda p: p.date, reverse=True)
-
-@router.put("/users/update_profile")
-def update_profile(
-    update: dict,
-    authorization: str = Header(None),
-    db: Session = Depends(get_db)
-):
-    if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Token manquant")
-    token = authorization.split(" ")[1]
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        email = payload.get("sub")
-    except Exception:
-        raise HTTPException(status_code=401, detail="Token invalide")
-    user = db.query(User).filter(User.email == email).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
-    # Met à jour les champs si présents dans la requête
-    for field in ["nom", "prenom", "sexe", "age", "telephone"]:  # <-- Ajout "telephone"
-        if field in update:
-            setattr(user, field, update[field])
-    db.commit()
-    db.refresh(user)
-    return {"msg": "Profil mis à jour"}
 
 # Après avoir ajouté la colonne "telephone" dans la classe User,
 # il faut générer la migration ou supprimer le fichier users.db pour SQLite
